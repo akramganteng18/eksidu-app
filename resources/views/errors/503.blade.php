@@ -1,0 +1,5 @@
+@extends('errors.layout')
+@section('art', 'docs')
+@section('kode', '503')
+@section('judul', 'Sedang dalam pemeliharaan')
+@section('pesan', config('eksidu.nama') . ' sedang diperbarui. Silakan kembali beberapa saat lagi.')

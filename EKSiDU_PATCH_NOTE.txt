@@ -1,0 +1,24 @@
+EKSiDU PATCH 1 — 13 November 2026
+
+Patch ini memperbaiki lima kegagalan yang dilaporkan pada hasil PHPUnit XAMPP.
+File kode yang berubah:
+- app/Http/Controllers/Siswa/DigitalDocumentController.php
+- app/Http/Controllers/Admin/StudentDocumentArchiveController.php
+- app/Models/Pengajuan.php
+- config/database.php
+File test yang diperbarui:
+- tests/Feature/BerkasPrivatTest.php
+Dokumentasi yang diperbarui:
+- CHANGELOG.md
+- FINAL_TEST_REPORT.md
+
+Terapkan patch dengan menyalin file sesuai jalur relatif ke folder proyek C:\xampp\htdocs\eksidu-app dan izinkan overwrite untuk file yang sama. Patch tidak berisi .env, database, storage privat, vendor, atau node_modules. Tidak ada migration baru di patch ini. Tiga migration 13 November sudah dilaporkan DONE oleh pemilik, sehingga jangan menjalankan migrate:fresh atau db:wipe.
+
+Setelah menyalin patch:
+1. php artisan optimize:clear
+2. php artisan test --filter=StudentDocumentArchiveTest
+3. php artisan test --filter=BerkasPrivatTest
+4. php artisan test --filter=ModelDanHelperTest
+5. php artisan test
+
+Hasil tes setelah patch belum diklaim lulus. Catat seluruh keluaran baru, termasuk skipped/deprecated.

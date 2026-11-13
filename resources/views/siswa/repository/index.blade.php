@@ -1,0 +1,14 @@
+@extends('layouts.app')
+@section('title', 'Repository Dokumen')
+@section('content')
+<div class="space-y-6"><x-page-header eyebrow="Layanan dokumen" title="Repository dokumen" subtitle="Temukan dokumen akademik yang tersedia dan ajukan peminjaman kepada petugas TU."/>
+<form method="GET" class="card card-pad flex flex-wrap gap-3"><input class="input max-w-md" name="q" value="{{ request('q') }}" placeholder="Cari nama dokumen..."><button class="btn btn-secondary">Cari</button></form>
+<div class="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+@forelse($documents as $document)
+<article class="card card-pad flex flex-col gap-3"><div class="flex items-start justify-between gap-2"><span class="chip tone-violet"><x-icon name="file-text"/></span><x-badge tone="green">Tersedia</x-badge></div><div><h2 class="font-extrabold">{{ $document->title }}</h2><p class="mt-1 text-sm text-muted">{{ $document->documentType?->nama ?? 'Dokumen akademik' }} · {{ $document->academic_year ?? 'Tahun ajaran tidak ditentukan' }}</p></div><p class="mt-auto text-xs text-muted">{{ $document->graduation_year ? 'Tahun lulus '.$document->graduation_year : 'Dokumen akademik' }}</p>
+@if($document->loans_count)<p class="text-sm text-muted">Anda sudah memiliki permohonan yang masih diproses atau disetujui.</p>@else<form method="POST" action="{{ route('siswa.repository.request',$document) }}" class="space-y-2">@csrf<label class="label" for="purpose-{{ $document->id }}">Keperluan peminjaman</label><textarea class="textarea" id="purpose-{{ $document->id }}" name="purpose" rows="2" minlength="5" maxlength="1000" required placeholder="Jelaskan keperluan Anda"></textarea><button class="btn btn-primary w-full">Ajukan peminjaman</button></form>@endif</article>
+@empty<div class="card card-pad md:col-span-2 xl:col-span-3"><x-empty-state art="docs" title="Belum ada dokumen tersedia" text="Dokumen yang disediakan sekolah akan muncul di halaman ini."/></div>@endforelse
+</div><div>{{ $documents->links() }}</div>
+<div class="card overflow-hidden"><div class="card-pad"><h2 class="font-extrabold">Riwayat permohonan saya</h2></div><div class="table-wrap"><table class="tbl"><thead><tr><th>Dokumen</th><th>Tanggal</th><th>Status</th><th>Akses</th></tr></thead><tbody>@forelse($loans as $loan)<tr><td>{{ $loan->document?->title }}</td><td>{{ $loan->created_at->format('d/m/Y') }}</td><td>{{ ['pending'=>'Menunggu','approved'=>'Disetujui','rejected'=>'Ditolak','completed'=>'Selesai'][$loan->status] ?? $loan->status }}</td><td>@if($loan->tokenAktif())<div class="max-w-28">{!! $loan->qr_svg !!}</div><p class="text-xs text-muted">{{ $loan->expires_at->format('d/m/Y H:i') }}</p><a class="btn btn-primary btn-sm mt-2" href="{{ route('siswa.repository.download', $loan) }}">Unduh dokumen</a>@else — @endif</td></tr>@empty<tr><td colspan="4" class="text-muted">Belum ada riwayat peminjaman.</td></tr>@endforelse</tbody></table></div></div>
+</div>
+@endsection

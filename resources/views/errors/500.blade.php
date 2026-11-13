@@ -1,0 +1,5 @@
+@extends('errors.layout')
+@section('art', 'docs')
+@section('kode', '500')
+@section('judul', 'Terjadi kesalahan pada server')
+@section('pesan', 'Maaf, ada masalah di sisi kami. Data Anda aman. Silakan coba lagi beberapa saat lagi atau hubungi admin sekolah bila berlanjut.')

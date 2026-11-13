@@ -1,0 +1,24 @@
+EKSiDU — PATCH 2: FIX ROUTE PERSYARATAN
+Tanggal: 13 November 2026
+
+PENYEBAB
+Route POST arsip-siswa/{siswa} didefinisikan sebelum route POST arsip-siswa/persyaratan.
+Laravel mencocokkan URL /arsip-siswa/persyaratan ke parameter {siswa}; akibatnya
+storeRequirement() tidak terpanggil dan test duplikasi tidak menerima session errors.
+
+FILE YANG DIGANTI
+1. routes/web.php
+2. tests/Feature/StudentDocumentArchiveTest.php (menambahkan regression test untuk route matching)
+
+CARA MEMASANG
+1. Ekstrak patch ini ke folder sementara.
+2. Salin kedua file pada struktur folder patch ke folder proyek:
+   routes/web.php -> C:\xampp\htdocs\eksidu-app\routes\web.php
+   tests/Feature/StudentDocumentArchiveTest.php -> C:\xampp\htdocs\eksidu-app\tests\Feature\StudentDocumentArchiveTest.php
+3. Buka PowerShell di C:\xampp\htdocs\eksidu-app.
+4. Jalankan:
+   php artisan optimize:clear
+   php artisan test --filter=StudentDocumentArchiveTest
+
+Patch ini hanya mengubah urutan route dan menambah satu regression test. Tidak ada migration baru,
+perubahan .env, APP_KEY, data database, atau storage. Jangan jalankan migrate:fresh maupun db:wipe.

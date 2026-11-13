@@ -1,0 +1,5 @@
+@extends('errors.layout')
+@section('art', 'docs')
+@section('kode', '419')
+@section('judul', 'Sesi telah berakhir')
+@section('pesan', 'Halaman kedaluwarsa karena terlalu lama tidak digunakan. Muat ulang halaman lalu coba lagi.')
