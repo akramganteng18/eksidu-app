@@ -17,8 +17,10 @@ class DatabaseSeeder extends Seeder
             AdminSeeder::class,
         ]);
 
-        // Data demo hanya untuk lingkungan pengembangan DAN bila diaktifkan eksplisit.
-        if (app()->environment(['local', 'testing']) && config('eksidu.akun_demo')) {
+        $bolehSeedDemo = (app()->environment(['local', 'testing']) && config('eksidu.akun_demo'))
+            || (app()->isProduction() && config('eksidu.seed_demo_production'));
+
+        if ($bolehSeedDemo) {
             $this->call(DemoSeeder::class);
         }
     }

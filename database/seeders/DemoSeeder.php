@@ -5,9 +5,11 @@ namespace Database\Seeders;
 use App\Models\DocumentType;
 use App\Models\Pengajuan;
 use App\Models\PengajuanRiwayat;
+use App\Models\StudentDocumentArchive;
 use App\Models\User;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\Hash;
+use RuntimeException;
 
 /**
  * Data demo FIKTIF untuk pengembangan/pengujian (bukan data pribadi siswa sungguhan).
@@ -18,14 +20,21 @@ class DemoSeeder extends Seeder
 {
     public function run(): void
     {
-        if (app()->isProduction()) {
-            $this->command?->error('DemoSeeder ditolak di lingkungan produksi.');
+        if (app()->isProduction() && ! config('eksidu.seed_demo_production')) {
+            throw new RuntimeException(
+                'DemoSeeder ditolak di production. Aktifkan EKSIDU_SEED_DEMO_PRODUCTION hanya untuk demo terkontrol.'
+            );
+        }
 
-            return;
+        $passwordDemo = (string) config('eksidu.demo_password');
+        if (app()->isProduction() && strlen($passwordDemo) < 12) {
+            throw new RuntimeException(
+                'EKSIDU_DEMO_PASSWORD wajib diisi dengan minimal 12 karakter saat seeding demo di production.'
+            );
         }
 
         $admin = User::where('role', 'admin')->orderBy('id')->first();
-        $password = Hash::make(config('eksidu.demo_password'));
+        $password = Hash::make($passwordDemo);
 
         $siswa = [
             ['Ahmad Fauzan Nugroho', 'ahmad.fauzan@siswa.smkn5surakarta.sch.id', '2223010001', 'XII RPL 1'],
@@ -53,6 +62,8 @@ class DemoSeeder extends Seeder
                 ]
             );
 
+            $this->buatArsipDemo($user, $i);
+
             if ($user->pengajuans()->exists()) {
                 continue;
             }
@@ -63,6 +74,57 @@ class DemoSeeder extends Seeder
         }
 
         $this->command?->info('Data demo siap. Kata sandi akun demo: nilai EKSIDU_DEMO_PASSWORD di .env.');
+    }
+
+    private function buatArsipDemo(User $user, int $index): void
+    {
+        $arsip = [
+            [
+                'category' => 'rapor', 'academic_year' => '2025/2026', 'semester' => 1,
+                'report_period' => 'akhir', 'publication_year' => null, 'type' => 'RPR',
+                'physical_status' => 'tersedia', 'physical_location' => 'Lemari A-01',
+            ],
+            [
+                'category' => 'rapor', 'academic_year' => '2025/2026', 'semester' => 2,
+                'report_period' => 'akhir', 'publication_year' => null, 'type' => 'RPR',
+                'physical_status' => ['tersedia', 'tersedia', 'rusak', 'hilang', 'tidak_tersedia'][$index],
+                'physical_location' => ['Lemari A-02', 'Lemari A-03', 'Perlu perbaikan', 'Perlu pencarian', null][$index],
+            ],
+            [
+                'category' => ['tka', 'skls', 'ijazah', 'tka', 'ijazah'][$index],
+                'academic_year' => null, 'semester' => null, 'report_period' => null,
+                'publication_year' => $index === 2 || $index === 4 ? 2025 : 2026,
+                'type' => ['SKHUN', 'SKL', 'IJZ', 'SKHUN', 'IJZ'][$index],
+                'physical_status' => ['tersedia', 'tersedia', 'tersedia', 'tidak_tersedia', 'tersedia'][$index],
+                'physical_location' => 'Lemari B-0' . ($index + 1),
+            ],
+        ];
+
+        foreach ($arsip as $item) {
+            $identity = [
+                $user->id, $item['category'], $item['academic_year'] ?? '',
+                $item['semester'] ?? '', $item['report_period'] ?? '', $item['publication_year'] ?? '',
+            ];
+            $identityKey = hash('sha256', json_encode($identity, JSON_UNESCAPED_SLASHES));
+
+            StudentDocumentArchive::withTrashed()->firstOrCreate(
+                ['identity_key' => $identityKey],
+                [
+                    'user_id' => $user->id,
+                    'document_type_id' => DocumentType::where('kode', $item['type'])->value('id'),
+                    'category' => $item['category'],
+                    'academic_year' => $item['academic_year'],
+                    'semester' => $item['semester'],
+                    'report_period' => $item['report_period'],
+                    'publication_year' => $item['publication_year'],
+                    'digital_status' => 'belum_diunggah',
+                    'physical_status' => $item['physical_status'],
+                    'physical_location' => $item['physical_location'],
+                    'notes' => 'Data arsip fiktif untuk demonstrasi.',
+                    'version' => 1,
+                ]
+            );
+        }
     }
 
     private function buatPengajuan(User $user, ?User $admin, string $jenis, string $kodeDok, string $status, int $hariLalu): void

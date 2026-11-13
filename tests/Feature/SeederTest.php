@@ -5,6 +5,7 @@ namespace Tests\Feature;
 use App\Models\DocumentType;
 use App\Models\Pengajuan;
 use App\Models\PengajuanRiwayat;
+use App\Models\StudentDocumentArchive;
 use App\Models\User;
 use Database\Seeders\AdminSeeder;
 use Database\Seeders\DatabaseSeeder;
@@ -98,6 +99,7 @@ class SeederTest extends TestCase
         $siswa = User::where('role', 'siswa')->count();
         $pengajuan = Pengajuan::count();
         $riwayat = PengajuanRiwayat::count();
+        $arsip = StudentDocumentArchive::count();
 
         $this->seed(DemoSeeder::class);
 
@@ -105,6 +107,10 @@ class SeederTest extends TestCase
         $this->assertSame($siswa, User::where('role', 'siswa')->count());
         $this->assertSame($pengajuan, Pengajuan::count());
         $this->assertSame($riwayat, PengajuanRiwayat::count());
+        $this->assertSame(15, $arsip);
+        $this->assertSame($arsip, StudentDocumentArchive::count());
+        $this->assertSame(10, StudentDocumentArchive::where('category', 'rapor')->count());
+        $this->assertSame(5, StudentDocumentArchive::whereIn('category', ['tka', 'skls', 'ijazah'])->count());
         $this->assertSame($pengajuan, Pengajuan::distinct()->count('kode_tiket'), 'kode tiket harus unik');
         $this->assertGreaterThan(0, $pengajuan);
     }
@@ -124,10 +130,43 @@ class SeederTest extends TestCase
     public function test_seeder_demo_ditolak_di_produksi(): void
     {
         app()->detectEnvironment(fn () => 'production');
+        config(['eksidu.seed_demo_production' => false]);
+
+        $this->expectException(\RuntimeException::class);
+        $this->jalankan(DemoSeeder::class);
+    }
+
+    public function test_seeder_demo_di_produksi_hanya_berjalan_dengan_opt_in_dan_password_kuat(): void
+    {
+        app()->detectEnvironment(fn () => 'production');
+        config([
+            'eksidu.seed_demo_production' => true,
+            'eksidu.akun_demo' => false,
+            'eksidu.demo_password' => 'PasswordPameran#2026',
+        ]);
+
+        $this->jalankan(DatabaseSeeder::class);
+
+        $siswa = User::where('role', 'siswa')->count();
+        $this->assertSame(5, $siswa);
+        $this->assertGreaterThan(0, Pengajuan::count());
+        $this->assertTrue(Hash::check(
+            'PasswordPameran#2026',
+            User::where('email', 'ahmad.fauzan@siswa.smkn5surakarta.sch.id')->firstOrFail()->password
+        ));
+    }
+
+    public function test_seeder_demo_di_produksi_menolak_password_yang_terlalu_pendek(): void
+    {
+        app()->detectEnvironment(fn () => 'production');
+        config([
+            'eksidu.seed_demo_production' => true,
+            'eksidu.demo_password' => 'password',
+        ]);
+
+        $this->expectException(\RuntimeException::class);
+        $this->expectExceptionMessage('minimal 12 karakter');
 
         $this->jalankan(DemoSeeder::class);
-
-        $this->assertSame(0, User::count());
-        $this->assertSame(0, Pengajuan::count());
     }
 }

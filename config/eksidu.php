@@ -30,6 +30,8 @@ return [
     // Menampilkan kotak "akun demo" di halaman login. Hanya untuk pengembangan.
     'akun_demo'       => (bool) env('EKSIDU_AKUN_DEMO', false),
     'demo_password'   => env('EKSIDU_DEMO_PASSWORD', 'password'),
+    // Opt-in khusus untuk seeding data demo saat aplikasi berjalan di production.
+    'seed_demo_production' => (bool) env('EKSIDU_SEED_DEMO_PRODUCTION', false),
 
     // Email tambahan hanya aktif jika SMTP sudah dikonfigurasi dan flag diaktifkan.
     'notifikasi_email' => (bool) env('EKSIDU_NOTIFIKASI_EMAIL', false),

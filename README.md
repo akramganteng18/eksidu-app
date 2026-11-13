@@ -55,6 +55,19 @@ npm.cmd run build
 - Periksa `php artisan migrate:status`, lalu jalankan `php artisan migrate` setelah backup dan persetujuan.
 - Jangan pernah menjalankan `migrate:fresh` atau `db:wipe` pada database yang berisi data.
 
+## Data demo pada hosting pameran
+
+Data siswa demo biasanya hanya dibuat di lingkungan lokal/testing. Untuk hosting pameran yang tidak digunakan publik, aktifkan sementara di `.env` hosting:
+
+```dotenv
+APP_ENV=production
+APP_DEBUG=false
+EKSIDU_SEED_DEMO_PRODUCTION=true
+EKSIDU_DEMO_PASSWORD=isi_dengan_sandi_kuat_minimal_12_karakter
+```
+
+Jalankan `php artisan config:clear`, lalu `php artisan db:seed` dari folder aplikasi di hosting. Seeder akan membuat akun, pengajuan, dan 15 arsip dokumen siswa demo fiktif dengan sandi yang diatur di `EKSIDU_DEMO_PASSWORD`; email siswa demo tercantum di `database/seeders/DemoSeeder.php`. Arsipnya berupa metadata dan status, tanpa file dokumen digital sungguhan. Data demo tidak mengubah sandi akun yang sudah ada. Setelah selesai, matikan `EKSIDU_SEED_DEMO_PRODUCTION` dan jalankan `php artisan config:cache`. Jangan gunakan opsi ini pada hosting publik atau database berisi data nyata. Opsi ini tidak menampilkan kotak shortcut akun demo di halaman login.
+
 ## Pengujian
 
 ```powershell
